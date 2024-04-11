@@ -1,4 +1,14 @@
-import { Body, Controller, Post, HttpCode, Get, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  HttpCode,
+  Get,
+  Patch,
+  Delete,
+  Req,
+  Inject,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { WebResponse } from '../model/web.model';
 import {
@@ -9,10 +19,15 @@ import {
 } from '../model/user.model';
 import { Auth } from '../common/auth.decorator';
 import { User } from '@prisma/client';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 @Controller('/api/users')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
+  ) {}
 
   @Post()
   @HttpCode(200)
@@ -54,6 +69,19 @@ export class UserController {
     const result = await this.userService.update(user, request);
     return {
       data: result,
+    };
+  }
+
+  @Delete('/logout')
+  @HttpCode(200)
+  async delete(
+    @Auth() user: User,
+    @Req() request: Request,
+  ): Promise<WebResponse<string>> {
+    const token = request.headers['authorization'];
+    await this.userService.logout(token);
+    return {
+      data: 'OK',
     };
   }
 }
