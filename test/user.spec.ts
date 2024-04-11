@@ -25,6 +25,7 @@ describe('UserController', () => {
 
   describe('POST /api/users', () => {
     beforeEach(async () => {
+      await testService.deleteSession();
       await testService.deleteUser();
     });
 
@@ -104,6 +105,7 @@ describe('UserController', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.username).toBe('test');
       expect(response.body.data.name).toBe('test');
+      expect(response.body.data.token).toBeDefined();
     });
   });
 
@@ -171,7 +173,7 @@ describe('UserController', () => {
       expect(response.body.data.name).toBe('test updated');
     });
 
-    it('should be able to update username and name with if username and name is same with old data', async () => {
+    it('should be able to update username and name if username and name is same with old data', async () => {
       const response = await request(app.getHttpServer())
         .patch('/api/users/current')
         .send({
