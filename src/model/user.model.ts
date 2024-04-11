@@ -5,6 +5,11 @@ export type RegisterUserRequest = {
   password: string;
 };
 
+export type LoginUserRequest = {
+  username: string;
+  password: string;
+};
+
 export type UserResponse = {
   username: string;
   name: string;

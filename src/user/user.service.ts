@@ -1,5 +1,9 @@
 import { HttpException, Inject, Injectable } from '@nestjs/common';
-import { RegisterUserRequest, UserResponse } from '../model/user.model';
+import {
+  LoginUserRequest,
+  RegisterUserRequest,
+  UserResponse,
+} from '../model/user.model';
 import { ValidationService } from '../common/validation.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -7,6 +11,7 @@ import { PrismaService } from '../common/prisma.service';
 import { UserValidation } from './user.validation';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class UserService {
@@ -59,6 +64,48 @@ export class UserService {
     return {
       username: user.username,
       name: user.name,
+    };
+  }
+
+  async login(request: LoginUserRequest): Promise<UserResponse> {
+    this.logger.info(`[LOGIN] ${JSON.stringify(request)}`);
+    const loginRequest = this.validationService.validate(
+      UserValidation.LOGIN,
+      request,
+    );
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        username: loginRequest.username,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('Username or password is wrong.', 401);
+    }
+
+    const passwordValidation = await bcrypt.compare(
+      loginRequest.password,
+      user.password,
+    );
+
+    if (!passwordValidation) {
+      throw new HttpException('Username or password is wrong.', 401);
+    }
+
+    const token = uuid();
+
+    await this.prismaService.session.create({
+      data: {
+        userId: user.id,
+        token,
+      },
+    });
+
+    return {
+      name: user.name,
+      username: user.username,
+      token: token,
     };
   }
 }
