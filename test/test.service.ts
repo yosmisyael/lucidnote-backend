@@ -9,7 +9,9 @@ export class TestService {
   async deleteUser() {
     await this.prismaService.user.deleteMany({
       where: {
-        username: 'test',
+        username: {
+          contains: 'test',
+        },
       },
     });
   }
@@ -20,6 +22,17 @@ export class TestService {
         username: 'test',
         name: 'test',
         email: 'test@example.com',
+        password: await bcrypt.hash('test', 10),
+      },
+    });
+  }
+
+  async createOtherUser() {
+    await this.prismaService.user.create({
+      data: {
+        username: 'test2',
+        name: 'test2',
+        email: 'test2@example.com',
         password: await bcrypt.hash('test', 10),
       },
     });
