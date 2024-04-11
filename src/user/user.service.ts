@@ -9,7 +9,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { PrismaService } from '../common/prisma.service';
 import { UserValidation } from './user.validation';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
 
@@ -106,6 +106,13 @@ export class UserService {
       name: user.name,
       username: user.username,
       token: token,
+    };
+  }
+
+  async get(user: User): Promise<UserResponse> {
+    return {
+      username: user.username,
+      name: user.name,
     };
   }
 }

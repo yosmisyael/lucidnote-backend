@@ -28,4 +28,21 @@ export class TestService {
   async deleteSession() {
     await this.prismaService.session.deleteMany();
   }
+
+  async createAndLoginUser() {
+    const user = await this.prismaService.user.create({
+      data: {
+        username: 'test',
+        name: 'test',
+        email: 'test@example.com',
+        password: await bcrypt.hash('test', 10),
+      },
+    });
+    await this.prismaService.session.create({
+      data: {
+        userId: user.id,
+        token: 'test',
+      },
+    });
+  }
 }
