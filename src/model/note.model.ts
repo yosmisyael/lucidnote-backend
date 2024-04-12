@@ -16,6 +16,13 @@ export type UpdateNoteRequest = {
   tags: { id: string }[];
 };
 
+export type SearchNoteRequest = {
+  title?: string;
+  tags?: string[];
+  page: number;
+  size: number;
+};
+
 export type NoteResponse = {
   id: string;
   title: string | null;

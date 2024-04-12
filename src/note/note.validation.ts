@@ -21,4 +21,11 @@ export class NoteValidation {
       }),
     ),
   });
+
+  static readonly SEARCH: ZodType = z.object({
+    title: z.string().min(1).max(255).optional(),
+    tags: z.array(string()).optional(),
+    page: z.number().positive().min(1),
+    size: z.number().positive().min(1).max(100),
+  });
 }

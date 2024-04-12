@@ -4,8 +4,10 @@ import {
   Delete,
   Get,
   HttpCode,
+  ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { NoteService } from './note.service';
@@ -13,6 +15,7 @@ import { WebResponse } from '../model/web.model';
 import {
   CreateNoteRequest,
   NoteResponse,
+  SearchNoteRequest,
   UpdateNoteRequest,
 } from '../model/note.model';
 import { Auth } from '../common/auth.decorator';
@@ -71,5 +74,23 @@ export class NoteController {
     return {
       data: 'OK',
     };
+  }
+
+  @Get()
+  @HttpCode(200)
+  async search(
+    @Auth() user: User,
+    @Query('title') title?: string,
+    @Query('tags') tags?: string[],
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('size', new ParseIntPipe({ optional: true })) size?: number,
+  ): Promise<WebResponse<NoteResponse[]>> {
+    const request: SearchNoteRequest = {
+      title,
+      tags,
+      page: page || 1,
+      size: size || 10,
+    };
+    return this.noteService.search(user, request);
   }
 }

@@ -133,7 +133,7 @@ describe('Note Controller', () => {
         .get(`/api/notes/${note.id}`)
         .set('Authorization', 'test');
 
-      logger.debug(response.body);
+      logger.info(response.body);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBe(note.id);
       expect(response.body.data.title).toBe(note.title);
@@ -147,7 +147,7 @@ describe('Note Controller', () => {
         .get('/api/notes/wrong')
         .set('Authorization', 'test');
 
-      logger.debug(response.body);
+      logger.info(response.body);
       expect(response.status).toBe(404);
       expect(response.body.error).toBeDefined();
     });
@@ -176,7 +176,7 @@ describe('Note Controller', () => {
           body: 'updated example note',
         });
 
-      logger.debug(response.body);
+      logger.info(response.body);
       expect(response.status).toBe(400);
       expect(response.body.error).toBeDefined();
     });
@@ -269,7 +269,7 @@ describe('Note Controller', () => {
         .delete(`/api/notes/${note.id}`)
         .set('Authorization', 'test');
 
-      logger.debug(response.body);
+      logger.info(response.body);
       expect(response.status).toBe(200);
       expect(response.body.data).toBe('OK');
     });
@@ -279,9 +279,111 @@ describe('Note Controller', () => {
         .delete('/api/notes/wrong')
         .set('Authorization', 'test');
 
-      logger.debug(response.body);
+      logger.info(response.body);
       expect(response.status).toBe(404);
       expect(response.body.error).toBeDefined();
+    });
+  });
+
+  describe('GET /api/notes', () => {
+    beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+      await testService.createNote('test', 'example', '');
+    });
+
+    afterEach(async () => {
+      await testService.deleteTag();
+      await testService.deleteNote();
+      await testService.deleteSession();
+      await testService.deleteUser();
+    });
+
+    it('should be able to get all notes', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/notes')
+        .set('Authorization', 'test');
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.paging.currentPage).toBe(1);
+      expect(response.body.paging.totalPage).toBe(1);
+      expect(response.body.paging.size).toBe(10);
+    });
+
+    it('should be able to search for notes using title', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/notes')
+        .set('Authorization', 'test')
+        .query({
+          title: 'example',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.paging.currentPage).toBe(1);
+      expect(response.body.paging.totalPage).toBe(1);
+      expect(response.body.paging.size).toBe(10);
+    });
+
+    it('should be able to search non-existent notes', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/notes')
+        .set('Authorization', 'test')
+        .query({
+          title: 'wrong',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(0);
+      expect(response.body.paging.currentPage).toBe(1);
+      expect(response.body.paging.totalPage).toBe(0);
+      expect(response.body.paging.size).toBe(10);
+    });
+
+    it('should be able to search notes with paging', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/notes')
+        .set('Authorization', 'test')
+        .query({
+          title: 'exa',
+          page: 2,
+          size: 1,
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(0);
+      expect(response.body.paging.currentPage).toBe(2);
+      expect(response.body.paging.totalPage).toBe(1);
+      expect(response.body.paging.size).toBe(1);
+    });
+
+    it('should be able to filter notes by tags', async () => {
+      for (let i = 1; i < 3; i++) {
+        await testService.createTag('test', `example${i}`);
+      }
+      const firstTag = await testService.getTag('example1');
+      const secondTag = await testService.getTag('example2');
+      await testService.createNote('test', 'example', '', [
+        firstTag.id,
+        secondTag.id,
+      ]);
+      const response = await request(app.getHttpServer())
+        .get('/api/notes')
+        .set('Authorization', 'test')
+        .query({
+          tags: [firstTag.id, secondTag.id],
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.paging.currentPage).toBe(1);
+      expect(response.body.paging.totalPage).toBe(1);
+      expect(response.body.paging.size).toBe(10);
     });
   });
 });

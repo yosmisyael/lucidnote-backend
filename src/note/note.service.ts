@@ -2,14 +2,16 @@ import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import {
   CreateNoteRequest,
   NoteResponse,
+  SearchNoteRequest,
   UpdateNoteRequest,
 } from '../model/note.model';
 import { ValidationService } from '../common/validation.service';
 import { NoteValidation } from './note.validation';
+import { WebResponse } from '../model/web.model';
 
 @Injectable()
 export class NoteService {
@@ -166,5 +168,89 @@ export class NoteService {
     });
 
     return true;
+  }
+
+  async search(
+    user: User,
+    request: SearchNoteRequest,
+  ): Promise<WebResponse<NoteResponse[]>> {
+    const searchRequest: SearchNoteRequest = this.validationService.validate(
+      NoteValidation.SEARCH,
+      request,
+    );
+    const skip: number = (searchRequest.page - 1) * searchRequest.size;
+
+    const filters: Prisma.NoteWhereInput[] = [];
+
+    if (searchRequest.title) {
+      filters.push({
+        OR: [
+          {
+            title: {
+              equals: searchRequest.title,
+            },
+          },
+          {
+            title: {
+              contains: searchRequest.title,
+            },
+          },
+        ],
+      });
+    }
+
+    if (searchRequest.tags && searchRequest.tags.length > 0) {
+      const requestTag = searchRequest.tags.map((id) => ({ id }));
+      await this.verifyTag(user.id, requestTag);
+      filters.push({
+        tags: {
+          some: {
+            id: {
+              in: searchRequest.tags,
+            },
+          },
+        },
+      });
+    }
+
+    const notes = await this.prismaService.note.findMany({
+      where: {
+        userId: user.id,
+        AND: filters,
+      },
+      take: searchRequest.size,
+      skip: skip,
+      include: {
+        tags: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const countNotes = await this.prismaService.note.count({
+      where: {
+        userId: user.id,
+        AND: filters,
+      },
+    });
+
+    return {
+      data: notes.map((note) => ({
+        id: note.id,
+        title: note.title,
+        body: note.body,
+        createdAt: note.createdAt,
+        updatedAt: note.updatedAt,
+        tags: note.tags,
+      })),
+      paging: {
+        currentPage: searchRequest.page,
+        totalPage: Math.ceil(countNotes / searchRequest.size),
+        size: searchRequest.size,
+      },
+    };
   }
 }
