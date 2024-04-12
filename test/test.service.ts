@@ -58,4 +58,23 @@ export class TestService {
       },
     });
   }
+
+  async createTag() {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        username: 'test',
+      },
+    });
+
+    await this.prismaService.tag.create({
+      data: {
+        name: 'example',
+        userId: user.id,
+      },
+    });
+  }
+
+  async deleteTag() {
+    await this.prismaService.tag.deleteMany();
+  }
 }
