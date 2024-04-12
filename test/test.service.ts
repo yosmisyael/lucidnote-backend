@@ -74,4 +74,8 @@ export class TestService {
   async deleteTag() {
     await this.prismaService.tag.deleteMany();
   }
+
+  async deleteNote() {
+    await this.prismaService.note.deleteMany();
+  }
 }
