@@ -24,7 +24,7 @@ describe('UserController', () => {
   });
 
   describe('POST /api/users', () => {
-    beforeEach(async () => {
+    afterEach(async () => {
       await testService.deleteSession();
       await testService.deleteUser();
     });
@@ -58,7 +58,7 @@ describe('UserController', () => {
     });
 
     it('should reject request if username already exist', async () => {
-      await testService.createUser();
+      await testService.createUser('test');
       const response = await request(app.getHttpServer())
         .post('/api/users')
         .send({
@@ -76,9 +76,12 @@ describe('UserController', () => {
 
   describe('POST /api/users/login', () => {
     beforeEach(async () => {
+      await testService.createUser('test');
+    });
+
+    afterEach(async () => {
       await testService.deleteSession();
       await testService.deleteUser();
-      await testService.createUser();
     });
 
     it('should reject request if request is invalid', async () => {
@@ -111,9 +114,12 @@ describe('UserController', () => {
 
   describe('GET /api/users/current', () => {
     beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+    });
+
+    afterEach(async () => {
       await testService.deleteSession();
       await testService.deleteUser();
-      await testService.createAndLoginUser();
     });
 
     it('should reject request if token is invalid', async () => {
@@ -140,9 +146,12 @@ describe('UserController', () => {
 
   describe('PATCH /api/users/current', () => {
     beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+    });
+
+    afterEach(async () => {
       await testService.deleteSession();
       await testService.deleteUser();
-      await testService.createAndLoginUser();
     });
 
     it('should reject request if request is invalid', async () => {
@@ -216,7 +225,7 @@ describe('UserController', () => {
     });
 
     it('should reject request if username already exist', async () => {
-      await testService.createOtherUser();
+      await testService.createUser('test2');
       const response = await request(app.getHttpServer())
         .patch('/api/users/current')
         .send({
@@ -230,7 +239,7 @@ describe('UserController', () => {
     });
 
     it('should reject request if token is invalid', async () => {
-      await testService.createOtherUser();
+      await testService.createUser('test2');
       const response = await request(app.getHttpServer())
         .patch('/api/users/current')
         .send({
@@ -246,9 +255,12 @@ describe('UserController', () => {
 
   describe('DELETE /api/users/logout', () => {
     beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+    });
+
+    afterEach(async () => {
       await testService.deleteSession();
       await testService.deleteUser();
-      await testService.createAndLoginUser();
     });
 
     it('should reject request if token is invalid', async () => {

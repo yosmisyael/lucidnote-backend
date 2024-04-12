@@ -25,10 +25,13 @@ describe('TagController', () => {
 
   describe('POST /api/tags', () => {
     beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+    });
+
+    afterEach(async () => {
       await testService.deleteTag();
       await testService.deleteSession();
       await testService.deleteUser();
-      await testService.createAndLoginUser();
     });
 
     it('should reject request if request is invalid ', async () => {
@@ -45,7 +48,7 @@ describe('TagController', () => {
     });
 
     it('should reject request tag name is already used', async () => {
-      await testService.createTag();
+      await testService.createTag('test', 'example');
       const response = await request(app.getHttpServer())
         .post('/api/tags')
         .set('Authorization', 'test')
@@ -75,11 +78,14 @@ describe('TagController', () => {
 
   describe('PATCH /api/tags/:tagId', () => {
     beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+      await testService.createTag('test', 'example');
+    });
+
+    afterEach(async () => {
       await testService.deleteTag();
       await testService.deleteSession();
       await testService.deleteUser();
-      await testService.createAndLoginUser();
-      await testService.createTag();
     });
 
     it('should reject update tag request if request is invalid ', async () => {

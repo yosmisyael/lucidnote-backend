@@ -16,24 +16,13 @@ export class TestService {
     });
   }
 
-  async createUser() {
+  async createUser(name: string) {
     await this.prismaService.user.create({
       data: {
-        username: 'test',
-        name: 'test',
-        email: 'test@example.com',
-        password: await bcrypt.hash('test', 10),
-      },
-    });
-  }
-
-  async createOtherUser() {
-    await this.prismaService.user.create({
-      data: {
-        username: 'test2',
-        name: 'test2',
-        email: 'test2@example.com',
-        password: await bcrypt.hash('test', 10),
+        username: name,
+        name: name,
+        email: `${name}@example.com`,
+        password: await bcrypt.hash(name, 10),
       },
     });
   }
@@ -42,33 +31,33 @@ export class TestService {
     await this.prismaService.session.deleteMany();
   }
 
-  async createAndLoginUser() {
+  async createAndLoginUser(name: string) {
     const user = await this.prismaService.user.create({
       data: {
-        username: 'test',
-        name: 'test',
-        email: 'test@example.com',
-        password: await bcrypt.hash('test', 10),
+        username: name,
+        name: name,
+        email: `${name}@example.com`,
+        password: await bcrypt.hash(`${test}`, 10),
       },
     });
     await this.prismaService.session.create({
       data: {
         userId: user.id,
-        token: 'test',
+        token: name,
       },
     });
   }
 
-  async createTag() {
+  async createTag(username: string, tagName: string) {
     const user = await this.prismaService.user.findUnique({
       where: {
-        username: 'test',
+        username,
       },
     });
 
     await this.prismaService.tag.create({
       data: {
-        name: 'example',
+        name: tagName,
         userId: user.id,
       },
     });
