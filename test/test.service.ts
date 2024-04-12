@@ -75,18 +75,30 @@ export class TestService {
     await this.prismaService.tag.deleteMany();
   }
 
-  async createNote(username: string, title: string, body: string) {
+  async createNote(
+    username: string,
+    title: string,
+    body: string,
+    tags: string[] | null = null,
+  ) {
+    let formattedTags: { id: string }[];
     const user = await this.prismaService.user.findUnique({
       where: {
         username: username,
       },
     });
 
+    if (tags && tags.length > 0) {
+      formattedTags = tags.map((id) => ({ id }));
+    }
     await this.prismaService.note.create({
       data: {
         title,
         body,
         userId: user.id,
+        tags: {
+          connect: formattedTags,
+        },
       },
     });
   }
@@ -95,6 +107,9 @@ export class TestService {
     return this.prismaService.note.findFirst({
       where: {
         title,
+      },
+      include: {
+        tags: true,
       },
     });
   }

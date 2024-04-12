@@ -3,7 +3,11 @@ import { PrismaService } from '../common/prisma.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { User } from '@prisma/client';
-import { CreateNoteRequest, NoteResponse } from '../model/note.model';
+import {
+  CreateNoteRequest,
+  NoteResponse,
+  UpdateNoteRequest,
+} from '../model/note.model';
 import { ValidationService } from '../common/validation.service';
 import { NoteValidation } from './note.validation';
 
@@ -87,6 +91,59 @@ export class NoteService {
     if (!note) {
       throw new HttpException('Note does not exist.', 404);
     }
+
+    return {
+      id: note.id,
+      title: note.title,
+      body: note.body,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+      tags: note.tags,
+    };
+  }
+
+  async update(user: User, request: UpdateNoteRequest): Promise<NoteResponse> {
+    this.logger.info(`[NOTE UPDATE]: ${JSON.stringify(request)}`);
+    const updateRequest: UpdateNoteRequest = this.validationService.validate(
+      NoteValidation.UPDATE,
+      request,
+    );
+    const isNoteAvailable: NoteResponse = await this.get(
+      user,
+      updateRequest.id,
+    );
+
+    const existingTagIdsArr = isNoteAvailable.tags!.map(({ id }) => id);
+    const requestedTagIds: Set<string> = new Set(
+      updateRequest.tags.map(({ id }) => id),
+    );
+
+    const tagsToDisconnect: { id: string }[] = existingTagIdsArr
+      .filter((id) => !requestedTagIds.has(id))
+      .map((id) => ({ id }));
+
+    const note = await this.prismaService.note.update({
+      where: {
+        id: updateRequest.id,
+        userId: user.id,
+      },
+      data: {
+        title: updateRequest.title,
+        body: updateRequest.body,
+        tags: {
+          disconnect: tagsToDisconnect,
+          connect: updateRequest.tags,
+        },
+      },
+      include: {
+        tags: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
 
     return {
       id: note.id,
