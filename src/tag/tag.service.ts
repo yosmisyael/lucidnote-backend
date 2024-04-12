@@ -117,19 +117,16 @@ export class TagService {
     };
   }
 
-  async remove(user: User, tagId: string): Promise<TagResponse> {
+  async remove(user: User, tagId: string): Promise<boolean> {
     await this.verifyTag(user.id, tagId);
-    const tag = await this.prismaService.tag.delete({
+    await this.prismaService.tag.delete({
       where: {
         userId: user.id,
         id: tagId,
       },
     });
 
-    return {
-      id: tag.id,
-      name: tag.name,
-    };
+    return true;
   }
 
   async getAll(user: User): Promise<TagResponse[]> {
