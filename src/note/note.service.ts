@@ -154,4 +154,17 @@ export class NoteService {
       tags: note.tags,
     };
   }
+
+  async remove(user: User, noteId: string): Promise<boolean> {
+    await this.get(user, noteId);
+
+    await this.prismaService.note.delete({
+      where: {
+        userId: user.id,
+        id: noteId,
+      },
+    });
+
+    return true;
+  }
 }

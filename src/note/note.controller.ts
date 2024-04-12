@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Patch,
@@ -57,6 +58,18 @@ export class NoteController {
     const response = await this.noteService.update(user, request);
     return {
       data: response,
+    };
+  }
+
+  @Delete('/:noteId')
+  @HttpCode(200)
+  async remove(
+    @Auth() user: User,
+    @Req() httpReq: Request,
+  ): Promise<WebResponse<string>> {
+    await this.noteService.remove(user, httpReq.params.noteId);
+    return {
+      data: 'OK',
     };
   }
 }
