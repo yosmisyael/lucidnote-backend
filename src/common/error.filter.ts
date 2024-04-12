@@ -5,7 +5,6 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { ZodError } from 'zod';
-import e from 'express';
 
 @Catch(ZodError, HttpException)
 export class ErrorFilter implements ExceptionFilter {

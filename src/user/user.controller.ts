@@ -7,7 +7,6 @@ import {
   Patch,
   Delete,
   Req,
-  Inject,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { WebResponse } from '../model/web.model';
@@ -19,15 +18,10 @@ import {
 } from '../model/user.model';
 import { Auth } from '../common/auth.decorator';
 import { User } from '@prisma/client';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Logger } from 'winston';
 
 @Controller('/api/users')
 export class UserController {
-  constructor(
-    private userService: UserService,
-    @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
-  ) {}
+  constructor(private userService: UserService) {}
 
   @Post()
   @HttpCode(200)
