@@ -75,6 +75,30 @@ export class TestService {
     await this.prismaService.tag.deleteMany();
   }
 
+  async createNote(username: string, title: string, body: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        username: username,
+      },
+    });
+
+    await this.prismaService.note.create({
+      data: {
+        title,
+        body,
+        userId: user.id,
+      },
+    });
+  }
+
+  async getNote(title: string) {
+    return this.prismaService.note.findFirst({
+      where: {
+        title,
+      },
+    });
+  }
+
   async deleteNote() {
     await this.prismaService.note.deleteMany();
   }

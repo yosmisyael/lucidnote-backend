@@ -67,4 +67,34 @@ export class NoteService {
       tags: note.tags,
     };
   }
+
+  async get(user: User, noteId: string): Promise<NoteResponse> {
+    const note = await this.prismaService.note.findUnique({
+      where: {
+        id: noteId,
+        userId: user.id,
+      },
+      include: {
+        tags: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!note) {
+      throw new HttpException('Note does not exist.', 404);
+    }
+
+    return {
+      id: note.id,
+      title: note.title,
+      body: note.body,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+      tags: note.tags,
+    };
+  }
 }

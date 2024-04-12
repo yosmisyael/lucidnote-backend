@@ -113,4 +113,43 @@ describe('Note Controller', () => {
       expect(response.body.data.tags.length).toBe(1);
     });
   });
+
+  describe('GET /api/notes/:noteId', () => {
+    beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+      await testService.createNote('test', 'example', '');
+    });
+
+    afterEach(async () => {
+      await testService.deleteTag();
+      await testService.deleteNote();
+      await testService.deleteSession();
+      await testService.deleteUser();
+    });
+
+    it('should be able to get note', async () => {
+      const note = await testService.getNote('example');
+      const response = await request(app.getHttpServer())
+        .get(`/api/notes/${note.id}`)
+        .set('Authorization', 'test');
+
+      logger.debug(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.id).toBe(note.id);
+      expect(response.body.data.title).toBe(note.title);
+      expect(response.body.data.body).toBe(note.body);
+      expect(response.body.data.createdAt).toBeDefined();
+      expect(response.body.data.updatedAt).toBeDefined();
+    });
+
+    it('should reject get note request if note does not exist', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/notes/wrong')
+        .set('Authorization', 'test');
+
+      logger.debug(response.body);
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBeDefined();
+    });
+  });
 });
