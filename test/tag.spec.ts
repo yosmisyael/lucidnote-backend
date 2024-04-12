@@ -72,4 +72,58 @@ describe('TagController', () => {
       expect(response.body.data.name).toBe('example');
     });
   });
+
+  describe('PATCH /api/tags/:tagId', () => {
+    beforeEach(async () => {
+      await testService.deleteTag();
+      await testService.deleteSession();
+      await testService.deleteUser();
+      await testService.createAndLoginUser();
+      await testService.createTag();
+    });
+
+    it('should reject update tag request if request is invalid ', async () => {
+      const tag = await testService.getTag('example');
+      const response = await request(app.getHttpServer())
+        .patch(`/api/tags/${tag.id}`)
+        .set('Authorization', 'test')
+        .send({
+          name: '',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBeDefined();
+    });
+
+    it('should be able to update tag', async () => {
+      const tag = await testService.getTag('example');
+      const response = await request(app.getHttpServer())
+        .patch(`/api/tags/${tag.id}`)
+        .set('Authorization', 'test')
+        .send({
+          name: 'updated  tag',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data.name).toBe('updated  tag');
+    });
+
+    it('should be able to update tag if tag name is the same with old data', async () => {
+      const tag = await testService.getTag('example');
+      const response = await request(app.getHttpServer())
+        .patch(`/api/tags/${tag.id}`)
+        .set('Authorization', 'test')
+        .send({
+          name: 'example',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data.name).toBe('example');
+    });
+  });
 });

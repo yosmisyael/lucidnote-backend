@@ -3,8 +3,12 @@ import { ValidationService } from '../common/validation.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { PrismaService } from '../common/prisma.service';
-import { Prisma, User } from '@prisma/client';
-import { CreateTagRequest, TagResponse } from '../model/tag.model';
+import { Prisma, Tag, User } from '@prisma/client';
+import {
+  CreateTagRequest,
+  TagResponse,
+  UpdateTagRequest,
+} from '../model/tag.model';
 import { TagValidation } from './tag.validation';
 
 @Injectable()
@@ -36,6 +40,21 @@ export class TagService {
     return countTags === 0;
   }
 
+  async verifyTag(userId: string, tagId: string): Promise<Tag> {
+    const tag = await this.prismaService.tag.findUnique({
+      where: {
+        id: tagId,
+        userId: userId,
+      },
+    });
+
+    if (!tag) {
+      throw new HttpException('Tag does not exist.', 404);
+    }
+
+    return tag;
+  }
+
   async create(user: User, request: CreateTagRequest): Promise<TagResponse> {
     this.logger.info(`[TAG CREATE]: ${JSON.stringify(request)}`);
     const createRequest: CreateTagRequest = this.validationService.validate(
@@ -58,6 +77,38 @@ export class TagService {
 
     const tag = await this.prismaService.tag.create({
       data: preparedData,
+    });
+
+    return {
+      id: tag.id,
+      name: tag.name,
+    };
+  }
+
+  async update(user: User, request: UpdateTagRequest): Promise<TagResponse> {
+    this.logger.info(`[TAG UPDATE]: ${JSON.stringify(request)}`);
+    const updateRequest: UpdateTagRequest = this.validationService.validate(
+      TagValidation.UPDATE,
+      request,
+    );
+    const isAvailable: boolean = await this.verifyUniqueness(
+      user.id,
+      updateRequest.name,
+      updateRequest.id,
+    );
+
+    if (!isAvailable) {
+      throw new HttpException('Tag name is already taken.', 400);
+    }
+
+    await this.verifyTag(user.id, updateRequest.id);
+
+    const tag = await this.prismaService.tag.update({
+      where: {
+        id: updateRequest.id,
+        userId: user.id,
+      },
+      data: updateRequest,
     });
 
     return {

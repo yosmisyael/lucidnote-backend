@@ -74,6 +74,14 @@ export class TestService {
     });
   }
 
+  async getTag(name: string) {
+    return this.prismaService.tag.findFirst({
+      where: {
+        name: name,
+      },
+    });
+  }
+
   async deleteTag() {
     await this.prismaService.tag.deleteMany();
   }
