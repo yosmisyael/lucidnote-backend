@@ -132,4 +132,38 @@ describe('TagController', () => {
       expect(response.body.data.name).toBe('example');
     });
   });
+
+  describe('DELETE /api/tags/:tagId', () => {
+    beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+      await testService.createTag('test', 'example');
+    });
+
+    afterEach(async () => {
+      await testService.deleteTag();
+      await testService.deleteSession();
+      await testService.deleteUser();
+    });
+
+    it('should reject request to delete tag if tag is not exist', async () => {
+      const response = await request(app.getHttpServer())
+        .delete('/api/tags/wrong')
+        .set('Authorization', 'test');
+
+      logger.info(response.body);
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBeDefined();
+    });
+
+    it('should be able to delete tag', async () => {
+      const tag = await testService.getTag('example');
+      const response = await request(app.getHttpServer())
+        .delete(`/api/tags/${tag.id}`)
+        .set('Authorization', 'test');
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe('OK');
+    });
+  });
 });

@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, Patch, Post, Req } from '@nestjs/common';
 import { TagService } from './tag.service';
 import {
   CreateTagRequest,
@@ -37,6 +37,18 @@ export class TagController {
     const result: TagResponse = await this.tagService.update(user, request);
     return {
       data: result,
+    };
+  }
+
+  @Delete('/:tagId')
+  @HttpCode(200)
+  async remove(
+    @Auth() user: User,
+    @Req() httpReq: Request,
+  ): Promise<WebResponse<string>> {
+    await this.tagService.remove(user, httpReq.params.tagId);
+    return {
+      data: 'OK',
     };
   }
 }
