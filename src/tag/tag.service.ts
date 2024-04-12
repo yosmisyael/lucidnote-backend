@@ -131,4 +131,16 @@ export class TagService {
       name: tag.name,
     };
   }
+
+  async getAll(user: User): Promise<TagResponse[]> {
+    return this.prismaService.tag.findMany({
+      where: {
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+  }
 }

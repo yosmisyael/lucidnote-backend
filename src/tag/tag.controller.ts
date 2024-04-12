@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, HttpCode, Patch, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Patch,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { TagService } from './tag.service';
 import {
   CreateTagRequest,
@@ -49,6 +58,15 @@ export class TagController {
     await this.tagService.remove(user, httpReq.params.tagId);
     return {
       data: 'OK',
+    };
+  }
+
+  @Get()
+  @HttpCode(200)
+  async getAll(@Auth() user: User): Promise<WebResponse<TagResponse[]>> {
+    const result = await this.tagService.getAll(user);
+    return {
+      data: result,
     };
   }
 }

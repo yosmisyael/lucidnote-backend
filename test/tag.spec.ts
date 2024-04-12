@@ -166,4 +166,29 @@ describe('TagController', () => {
       expect(response.body.data).toBe('OK');
     });
   });
+
+  describe('GET /api/tags', () => {
+    beforeEach(async () => {
+      await testService.createAndLoginUser('test');
+      for (let i = 0; i < 3; i++) {
+        await testService.createTag('test', `example${i}`);
+      }
+    });
+
+    afterEach(async () => {
+      await testService.deleteTag();
+      await testService.deleteSession();
+      await testService.deleteUser();
+    });
+
+    it('should be able to get all tag', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/tags')
+        .set('Authorization', 'test');
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(3);
+    });
+  });
 });
