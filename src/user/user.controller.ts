@@ -6,7 +6,7 @@ import {
   Get,
   Patch,
   Delete,
-  Req,
+  Headers,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { WebResponse } from '../model/web.model';
@@ -70,9 +70,8 @@ export class UserController {
   @HttpCode(200)
   async delete(
     @Auth() user: User,
-    @Req() request: Request,
+    @Headers('authorization') token: string,
   ): Promise<WebResponse<string>> {
-    const token = request.headers['authorization'];
     await this.userService.logout(token);
     return {
       data: 'OK',
