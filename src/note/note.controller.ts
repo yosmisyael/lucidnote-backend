@@ -4,11 +4,11 @@ import {
   Delete,
   Get,
   HttpCode,
+  Param,
   ParseIntPipe,
   Patch,
   Post,
   Query,
-  Req,
 } from '@nestjs/common';
 import { NoteService } from './note.service';
 import { WebResponse } from '../model/web.model';
@@ -20,7 +20,6 @@ import {
 } from '../model/note.model';
 import { Auth } from '../common/auth.decorator';
 import { User } from '@prisma/client';
-import { Request } from 'express';
 
 @Controller('/api/notes')
 export class NoteController {
@@ -42,9 +41,9 @@ export class NoteController {
   @HttpCode(200)
   async get(
     @Auth() user: User,
-    @Req() httpReq: Request,
+    @Param('noteId') noteId: string,
   ): Promise<WebResponse<NoteResponse>> {
-    const response = await this.noteService.get(user, httpReq.params.noteId);
+    const response = await this.noteService.get(user, noteId);
     return {
       data: response,
     };
@@ -55,9 +54,9 @@ export class NoteController {
   async update(
     @Auth() user: User,
     @Body() request: UpdateNoteRequest,
-    @Req() httpReq: Request,
+    @Param('noteId') noteId: string,
   ): Promise<WebResponse<NoteResponse>> {
-    request.id = httpReq.params.noteId;
+    request.id = noteId;
     const response = await this.noteService.update(user, request);
     return {
       data: response,
@@ -68,9 +67,9 @@ export class NoteController {
   @HttpCode(200)
   async remove(
     @Auth() user: User,
-    @Req() httpReq: Request,
+    @Param('noteId') noteId: string,
   ): Promise<WebResponse<string>> {
-    await this.noteService.remove(user, httpReq.params.noteId);
+    await this.noteService.remove(user, noteId);
     return {
       data: 'OK',
     };

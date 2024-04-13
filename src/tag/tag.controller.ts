@@ -4,9 +4,9 @@ import {
   Delete,
   Get,
   HttpCode,
+  Param,
   Patch,
   Post,
-  Req,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
 import {
@@ -17,7 +17,6 @@ import {
 import { Auth } from '../common/auth.decorator';
 import { User } from '@prisma/client';
 import { WebResponse } from '../model/web.model';
-import { Request } from 'express';
 
 @Controller('/api/tags')
 export class TagController {
@@ -40,9 +39,9 @@ export class TagController {
   async update(
     @Auth() user: User,
     @Body() request: UpdateTagRequest,
-    @Req() httpReq: Request,
+    @Param('tagId') tagId: string,
   ): Promise<WebResponse<TagResponse>> {
-    request.id = httpReq.params.tagId;
+    request.id = tagId;
     const result: TagResponse = await this.tagService.update(user, request);
     return {
       data: result,
@@ -53,9 +52,9 @@ export class TagController {
   @HttpCode(200)
   async remove(
     @Auth() user: User,
-    @Req() httpReq: Request,
+    @Param('tagId') tagId: string,
   ): Promise<WebResponse<string>> {
-    await this.tagService.remove(user, httpReq.params.tagId);
+    await this.tagService.remove(user, tagId);
     return {
       data: 'OK',
     };
